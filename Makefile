@@ -2,9 +2,9 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -I$(INCLUDES)
 
 TARGET = pcfg_tool
-SRCS = main.cpp utils.ccp utils2.ccp
-OBJS = $(SRCS:.ccp=.o)
-INCLUDES = include
+SRCS = main.cpp utils.ccp utils2.cpp
+OBJS = $(SRCS:.cpp=.o)
+INCLUDES = .
 
 .PHONY: all clean
 
