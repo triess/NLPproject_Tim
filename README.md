@@ -1,3 +1,3 @@
 # NLPproject_Tim
 
-call the executable with one comandline argument that is the absolute path to the file with the s-expression of the trees.
+for grammar induction call the executable with two comandline arguments like: .\executable induce "path/to/tree/bank/file.txt"
