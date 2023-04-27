@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -I$(INCLUDES)
 
 TARGET = pcfg_tool
-SRCS = main.cpp utils.ccp utils2.cpp
+SRCS = main.cpp utils.cpp
 OBJS = $(SRCS:.cpp=.o)
 INCLUDES = .
 

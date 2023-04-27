@@ -1,6 +1,8 @@
 #include "utils.h"
 #include <fstream>
 #include <algorithm>
+#include <filesystem>
+#include <iostream>
 
 node readTree(const std::string& treeString){
     std::vector<std::string> elements = split_sexpr(treeString);
@@ -18,9 +20,12 @@ node readTree(const std::string& treeString){
 }
 
 std::vector<rule> treeToRules(const node& tree){
-    if(tree.children.empty())return {};
+    if(tree.children.size()==1 && tree.children[0].children.empty()){
+        rule r = {tree.data,{tree.children[0].data},1,true};
+        return {r};
+    }
     std::vector<rule> rules ={};
-    rule r = {tree.data,{},0};
+    rule r = {tree.data,{},1,false};
     for(auto &n:tree.children){
         r.right.push_back(n.data);
         std::vector<rule> recur = treeToRules(n);
@@ -30,7 +35,7 @@ std::vector<rule> treeToRules(const node& tree){
     return rules;
 }
 
-struct index* parseBank(std::string path){
+struct index* parseBank(const std::string& path){
     std::ifstream treeBank (path);
     //treeBank.open("material/large/training.mrg");
     std::string oneTree;
@@ -90,4 +95,33 @@ std::vector<std::string> split_sexpr(std::string sexpr){
         parts.push_back(sexpr.substr(start));
     }
     return parts;
+}
+
+void saveGrammar(const index& grammar){
+    std::ofstream lexi("grammar.lexicon",std::ios_base::app);
+    std::ofstream words("grammar.words",std::ios_base::app);
+    std::ofstream rules("grammar.rules",std::ios_base::app);
+    for(const auto& kvp:grammar.left_to_rules){
+        int counter=0;
+        for(const auto& r:kvp.second){
+            counter += r.count;
+        }
+        for(const auto& r:kvp.second){
+            double p = r.count/counter;
+            if(r.lexical){
+                lexi << r.left << " " << r.right[0] << " " << p << "\n";
+                words << r.right[0] << "\n";
+            }else{
+                rules<< r.left << " ";
+                for(const auto& s:r.right){
+                    rules << s << " ";
+                }
+                rules << p << "\n";
+            }
+
+        }
+    }
+    lexi.close();
+    words.close();
+    rules.close();
 }

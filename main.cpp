@@ -1,11 +1,10 @@
 #include <iostream>
 #include "utils.h"
 int main(int argc, char** argv) {
-    auto x=parseBank(argv[0]); //"c:/Users/timri/CLionProjects/NLP_project/material/large/training.txt"
-    int rulesCounter=0;
-    for(auto &i:x->left_to_rules){
-        rulesCounter+=i.second.size();
+    if(argv[0]=="induce"){
+        auto x=parseBank(argv[1]);
+        saveGrammar(*x);
     }
-    std::cout<<rulesCounter<<"size"<<x->left_to_rules.size()<<std::endl;
+     //"c:/Users/timri/CLionProjects/NLP_project/material/large/training.txt"
     return 0;
 }

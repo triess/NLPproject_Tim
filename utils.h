@@ -13,6 +13,7 @@ struct rule{
     std::string left;
     std::vector<std::string> right;
     int count;
+    bool lexical;
 };
 
 bool compareRulesByCount(const rule& r1, const rule& r2);
@@ -55,6 +56,7 @@ struct index{
 };
 
 node readTree(const std::string& treeString);
-struct index* parseBank(std::string path);
+struct index* parseBank(const std::string& path);
 std::vector<std::string> split(const std::string& s, const std::string& delimiter);
 std::vector<std::string> split_sexpr(std::string sexpr);
+void saveGrammar(const index& grammar);
