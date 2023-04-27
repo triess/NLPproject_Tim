@@ -98,9 +98,9 @@ std::vector<std::string> split_sexpr(std::string sexpr){
 }
 
 void saveGrammar(const struct index& grammar, std::string name){
-    std::ofstream lexi(name+".lexicon");
-    std::ofstream words(name+".words");
-    std::ofstream rules(name+".rules");
+    std::ofstream lexi(name+".lexicon",std::ios::trunc);
+    std::ofstream words(name+".words",std::ios::trunc);
+    std::ofstream rules(name+".rules",std::ios::trunc);
     for(const auto& kvp:grammar.left_to_rules){
         int counter=0;
         for(const auto& r:kvp.second){
