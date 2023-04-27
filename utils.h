@@ -61,3 +61,4 @@ std::vector<std::string> split(const std::string& s, const std::string& delimite
 std::vector<std::string> split_sexpr(std::string sexpr);
 void saveGrammar(const struct index& grammar);
 void printGrammar(const struct index& grammar);
+std::vector<rule> treeToRules(const node& tree);

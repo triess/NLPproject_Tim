@@ -45,8 +45,8 @@ struct index* parseBank(const std::string& path){
             //std::cout<<r.left<<std::endl;
             ind->buildIndexByRule(r);
         }
-        ind->finishIndex();
     }
+    ind->finishIndex();
     treeBank.close();
     return ind;
 }
@@ -112,13 +112,12 @@ void saveGrammar(const struct index& grammar){
                 lexi << r.left << " " << r.right[0] << " " << p << "\n";
                 words << r.right[0] << "\n";
             }else{
-                rules<< r.left << " ";
+                rules<< r.left << " -> ";
                 for(const auto& s:r.right){
                     rules << s << " ";
                 }
                 rules << p << "\n";
             }
-
         }
     }
     lexi.close();
@@ -136,6 +135,7 @@ void printGrammar(const struct index& grammar){
         for(const auto& r:kvp.second){
             double p = static_cast<double>(r.count)/static_cast<double>(counter);
             std::cout<<r.left<<" ";
+            if(!r.lexical)std::cout<<"-> ";
             for(const auto& s:r.right){
                 std::cout<<s<<" ";
             }
