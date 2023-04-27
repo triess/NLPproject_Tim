@@ -60,3 +60,4 @@ struct index* parseBank(const std::string& path);
 std::vector<std::string> split(const std::string& s, const std::string& delimiter);
 std::vector<std::string> split_sexpr(std::string sexpr);
 void saveGrammar(const index& grammar);
+void printGrammar(const index& grammar);

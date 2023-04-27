@@ -107,7 +107,7 @@ void saveGrammar(const index& grammar){
             counter += r.count;
         }
         for(const auto& r:kvp.second){
-            double p = r.count/counter;
+            double p = static_cast<double>(r.count)/static_cast<double>(counter);
             if(r.lexical){
                 lexi << r.left << " " << r.right[0] << " " << p << "\n";
                 words << r.right[0] << "\n";
@@ -124,4 +124,22 @@ void saveGrammar(const index& grammar){
     lexi.close();
     words.close();
     rules.close();
+}
+
+void printGrammar(const index& grammar){
+    std::cout<<"printing grammar"<<std::endl;
+    for(const auto& kvp:grammar.left_to_rules){
+        int counter=0;
+        for(const auto& r:kvp.second){
+            counter += r.count;
+        }
+        for(const auto& r:kvp.second){
+            double p = static_cast<double>(r.count)/static_cast<double>(counter);
+            std::cout<<r.left<<" ";
+            for(const auto& s:r.right){
+                std::cout<<s<<" ";
+            }
+            std::cout<<p<<std::endl;
+        }
+    }
 }
