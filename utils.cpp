@@ -97,10 +97,10 @@ std::vector<std::string> split_sexpr(std::string sexpr){
     return parts;
 }
 
-void saveGrammar(const struct index& grammar){
-    std::ofstream lexi("grammar.lexicon",std::ios_base::app);
-    std::ofstream words("grammar.words",std::ios_base::app);
-    std::ofstream rules("grammar.rules",std::ios_base::app);
+void saveGrammar(const struct index& grammar, std::string name){
+    std::ofstream lexi(name+".lexicon");
+    std::ofstream words(name+".words");
+    std::ofstream rules(name+".rules");
     for(const auto& kvp:grammar.left_to_rules){
         int counter=0;
         for(const auto& r:kvp.second){
@@ -126,7 +126,7 @@ void saveGrammar(const struct index& grammar){
 }
 
 void printGrammar(const struct index& grammar){
-    std::cout<<"printing grammar"<<std::endl;
+    //std::cout<<"printing grammar"<<std::endl;
     for(const auto& kvp:grammar.left_to_rules){
         int counter=0;
         for(const auto& r:kvp.second){

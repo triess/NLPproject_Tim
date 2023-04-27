@@ -59,6 +59,6 @@ node readTree(const std::string& treeString);
 struct index* parseBank(const std::string& path);
 std::vector<std::string> split(const std::string& s, const std::string& delimiter);
 std::vector<std::string> split_sexpr(std::string sexpr);
-void saveGrammar(const struct index& grammar);
+void saveGrammar(const struct index& grammar, std::string name);
 void printGrammar(const struct index& grammar);
 std::vector<rule> treeToRules(const node& tree);

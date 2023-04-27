@@ -18,12 +18,12 @@ int main(int argc, char** argv) {
         }
         ind->finishIndex();
         if(argc==3){
-            saveGrammar(*ind);
+            saveGrammar(*ind,argv[2]);
         }else{
             printGrammar(*ind);
         }
-    }else if(std::strcmp(command,"parse")==0){
-
+    }else {
+        return 22;
     }
      //"c:/Users/timri/CLionProjects/NLP_project/material/large/training.txt"
     return 0;
