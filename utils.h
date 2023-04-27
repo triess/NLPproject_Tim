@@ -48,7 +48,7 @@ struct index{
     [[nodiscard]] const rule& getBestMatch(const std::string& left) const{
         auto it = left_to_rules.find(left);
         if(it == left_to_rules.end() || it->second.empty()){
-            static rule default_rule = {"", {}, 0};
+            static rule default_rule = {"", {}, 0,false};
             return default_rule;
         }
         return it->second.front();
@@ -59,5 +59,5 @@ node readTree(const std::string& treeString);
 struct index* parseBank(const std::string& path);
 std::vector<std::string> split(const std::string& s, const std::string& delimiter);
 std::vector<std::string> split_sexpr(std::string sexpr);
-void saveGrammar(const index& grammar);
-void printGrammar(const index& grammar);
+void saveGrammar(const struct index& grammar);
+void printGrammar(const struct index& grammar);
