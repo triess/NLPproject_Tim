@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cstring>
 #include "utils.h"
+#include "main.h"
+#include <cstring>
 
 int main(int argc, char** argv) {
     auto command = argv[1];
@@ -25,11 +27,35 @@ int main(int argc, char** argv) {
     }else if(std::strcmp(command,"parse")==0){
         std::string rules = argv[argc-2];
         std::string lex = argv[argc-1];
-
+        auto root = getCmdOption(argv,argv+argc,"-i");
+        if(root==nullptr)std::strcpy(root,"ROOT");
+        auto r = loadNonTerminal(rules);
+        auto l = loadTerminal(lex);
+        std::string line;
+        while(std::getline(std::cin,line)){
+            if(!line.empty()){
+                auto bt=deductiveParsing(line,r,l,root);
+                printBacktrace(bt,line);
+            }
+        }
     }
     else {
         return 22;
     }
      //"c:/Users/timri/CLionProjects/NLP_project/material/large/training.txt"
     return 0;
+}
+
+char* getCmdOption(char ** begin, char ** end, const std::string & option)
+{
+    char ** itr = std::find(begin, end, option);
+    if (itr != end && ++itr != end)
+    {
+        return *itr;
+    }
+    return 0;
+}
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+    return std::find(begin, end, option) != end;
 }

@@ -1,7 +1,6 @@
 #include "utils.h"
 #include <fstream>
 #include <algorithm>
-#include <filesystem>
 #include <iostream>
 #include <set>
 #include <queue>
@@ -44,7 +43,6 @@ struct index* parseBank(const std::string& path){
     auto* ind = new struct index();
     while (std::getline(treeBank,oneTree)){
         for(auto &r:treeToRules(readTree(oneTree))){
-            //std::cout<<r.left<<std::endl;
             ind->buildIndexByRule(r);
         }
     }
@@ -57,7 +55,7 @@ bool compareRulesByCount(const rule& r1, const rule& r2){
     return r1.count > r2.count;
 }
 std::vector<std::string> split(const std::string& s, const std::string& delimiter) {
-    size_t pos_start = 0, pos_end = 0, delim_len = delimiter.length();
+    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
     std::vector<std::string> res;
     res.reserve(std::count(s.begin(), s.end(), delimiter[0]) + 1);
 
@@ -99,7 +97,7 @@ std::vector<std::string> split_sexpr(std::string sexpr){
     return parts;
 }
 
-void saveGrammar(const struct index& grammar, std::string name){
+void saveGrammar(const struct index& grammar, const std::string& name){
     std::ofstream lexi(name+".lexicon",std::ios::trunc);
     std::ofstream words(name+".words",std::ios::trunc);
     std::ofstream rules(name+".rules",std::ios::trunc);
@@ -128,80 +126,131 @@ void saveGrammar(const struct index& grammar, std::string name){
 }
 
 std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<std::string, std::set<weighted_rule, weightedRulesComparator>>& rules, std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> lex, std::string root){
-    std::priority_queue<queue_element> queue;
+     auto queue = new struct std::priority_queue<queue_element>();
     std::vector<queue_element> c;
     auto words = split(sentence, " ");
     int counter=0;
     //initialize queue
+    std::cerr<<"initializing q"<<std::endl;
     for(const auto& w:words){
         auto qe= new struct queue_element(counter,counter+1,*lex[w].rbegin(),0.0,{});
         qe->prob=qe->rule.weight;
         qe->backtrace.emplace_back(qe->rule.rule);
-        queue.push(*qe);
+        queue->push(*qe);
         counter++;
     }
+    std::cerr<<"starting main loop"<<std::endl;
     //main loop
-    while(queue.top().prob>0){
-        auto qe = queue.top();
-        queue.pop();
+    while(!queue->empty()){
+        auto qe = queue->top();
+        queue->pop();
         auto it = std::find(c.begin(), c.end(),qe);
         if(it==c.end()){
-            c.emplace_back(*new struct queue_element(*it));
+            c.emplace_back(*new struct queue_element(qe));
             //add q elements
             addQueueElements(rules,qe,queue,words.size(),c);
         } else if(it->prob==0){
             it->prob=qe.prob;
             addQueueElements(rules,qe,queue,words.size(),c);
         }
+        std::cerr<<queue->size()<<std::endl;
     }
+    std::cerr<<"finding solution"<<std::endl;
     //find solution
     auto final = std::find_if(c.begin(),c.end(),[&words, &root](const struct queue_element& x){
-      return x.left==0 && x.right==words.size() && x.rule.rule.left==root;
+      return x.left==0 && x.right==words.size();//&& x.rule.rule.left==root
     });
     if(final==c.end())return {};
     return final->backtrace;
 }
 
-void addQueueElements(std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> rules,const queue_element& qe,std::priority_queue<queue_element> queue, int word_count,std::vector<queue_element> c){
+void printBacktrace(const std::vector<rule>& bt, const std::string& sentence){
+    std::cerr<<"printing"<<std::endl;
+    if(bt.empty()){
+        std::cout<<"NOPARSE "+sentence<<std::endl;
+        return;
+    }
+    auto words = split(sentence, " ");
+    auto bottom_up = new std::vector<node>();
+    for(const auto& w:words){
+        bottom_up->emplace_back(*new struct node(w));
+    }
+    for(auto r:bt){
+        if(r.right.size()==1){
+            auto it= std::find_if(bottom_up->begin(),bottom_up->end(),[&r](const node& x){return x.data==r.right[0];});
+            if(it==bottom_up->end()){
+                std::cout<<"NOPARSE "+sentence<<std::endl;
+                return;
+            }
+            auto new_element = new node(r.left,{*new struct node(*it)});
+            *it= *new_element;
+        }else if(r.right.size()==2){
+            auto child1 = std::find_if(bottom_up->begin(),bottom_up->end(),[&r](const node& x){return x.data==r.right[0];});
+            auto child2 = std::find_if(bottom_up->begin(),bottom_up->end(),[&r](const node& x){return x.data==r.right[1];});
+            if(child1==bottom_up->end() || child2==bottom_up->end()){
+                std::cout<<"NOPARSE "+sentence<<std::endl;
+                return;
+            }
+            auto new_element = new node(r.left,{*new struct node(*child1),*new struct node(*child2)});
+            *child1 = *new_element;
+            bottom_up->erase(child2);
+        }
+    }
+    std::cout<<treeToSExpression((*bottom_up)[0])<<std::endl;
+}
+
+std::string treeToSExpression(const node& root){
+    std::cerr<<"converting to sex"<<std::endl;
+    std::string ret = "(" + root.data;
+    for(const auto& child : root.children){
+        ret += " " + treeToSExpression(child);
+    }
+    ret += ")";
+    return ret;
+}
+
+void addQueueElements(std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> rules,const queue_element& qe,std::priority_queue<queue_element> * queue, int word_count,std::vector<queue_element> c){
+    //std::cerr<<"adding q elements"<<std::endl;
     for(auto r:rules[qe.rule.rule.left]){
         if(r.rule.right.size()==1){
+            //std::cerr<<"case 1"<<std::endl;
             auto nqe = new struct queue_element(qe);
             nqe->rule = r;
             nqe->prob = qe.prob*r.weight;
             nqe->backtrace.emplace_back(r.rule);
-            queue.push(*nqe);
+            queue->push(*nqe);
         }else if(r.rule.right[0]==qe.rule.rule.left){
-            for(int j=qe.right;j<word_count;j++){
-                auto finder = std::find(c.begin(),c.end(),*new struct queue_element(qe.left,j,r,0.0));
+            //std::cerr<<"case 2"<<std::endl;
+            for(int j=qe.right+1;j<word_count+1;j++){
+                auto finder = std::find_if(c.begin(),c.end(),[&r,&j,&qe](const queue_element& x){return x.rule.rule.left==r.rule.right[1]&&x.left==qe.right && x.right==j;});//*new struct queue_element(qe.right,j,r,0.0)
                 if(finder!=c.end() && finder->prob!=0.0){
+                    std::cerr<<"success 1"<<std::endl;
                     auto x =new struct queue_element(qe.left,j,r,finder->prob*qe.prob*r.weight,{});
                     std::copy(qe.backtrace.begin(), qe.backtrace.end(),x->backtrace.end());
                     x->backtrace.emplace_back(r.rule);
-                    queue.push(*x);
+                    queue->push(*x);
                 }
             }
         }else if(r.rule.right[1]==qe.rule.rule.left){
+            //std::cerr<<"case 3"<<std::endl;
             for(int i=0;i<qe.left;i++){
-                auto finder = std::find(c.begin(),c.end(),*new struct queue_element(i,qe.right,r,0.0));
+                auto finder = std::find_if(c.begin(),c.end(),[&r,&i,&qe](const queue_element& x){return x.rule.rule.left==r.rule.right[0] && x.left==i && x.right==qe.left;});//*new struct queue_element(i,qe.left,r,0.0)
                 if(finder!=c.end() && finder->prob!=0.0){
-                    auto x = new struct queue_element(i,qe.right,r,finder->prob*qe.prob*r.weight,{});
-                    std::copy(qe.backtrace.begin(), qe.backtrace.end(),x->backtrace.end());
+                    std::cerr<<"success 2"<<std::endl;
+                    auto x = new struct queue_element(i,qe.right,r,finder->prob*qe.prob*r.weight,*new std::vector<rule>(qe.backtrace));
                     x->backtrace.emplace_back(r.rule);
-                    queue.push(*x);
+                    queue->push(*x);
                 }
             }
         }
     }
 }
 
-void loadGrammar(const std::string& rules, const std::string& lex){
-    auto non_terminal = loadNonTerminal(rules);
-    auto terminal = loadTerminal(lex);
-}
-
 std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> loadTerminal(const std::string& lex){
     std::map<std::string, std::set<weighted_rule,weightedRulesComparator>> terminal;
+    //std::cerr<<lex<<std::endl;
     std::ifstream rules_data(lex);
+    //std::cerr<<rules_data.is_open()<<std::endl;
     std::string line;
     while(std::getline(rules_data, line)){
         if(line.empty()){
@@ -217,13 +266,15 @@ std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> loadTerm
 std::map<std::string, std::set<weighted_rule,weightedRulesComparator>> loadNonTerminal(const std::string& rules){
     std::map<std::string, std::set<weighted_rule,weightedRulesComparator>> non_terminal;
     std::ifstream rules_data(rules);
+    //std::cerr<<rules<<std::endl;
+    //std::cerr<<rules_data.is_open()<<std::endl;
     std::string line;
     while(std::getline(rules_data, line)){
         if(line.empty()){
             break;
         }else{
             auto wr = readNonLexical(line);
-            for(auto nt:wr.rule.right){
+            for(const auto& nt:wr.rule.right){
                 non_terminal[nt].insert(wr);
             }
         }
@@ -249,7 +300,6 @@ struct weighted_rule readNonLexical(const std::string& line){
 }
 
 void printGrammar(const struct index& grammar){
-    //std::cout<<"printing grammar"<<std::endl;
     for(const auto& kvp:grammar.left_to_rules){
         int counter=0;
         for(const auto& r:kvp.second){
