@@ -1,8 +1,11 @@
 #include <string>
 #include <fstream>
+#include <utility>
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <set>
+#include <queue>
 
 struct node{
     explicit node(std::string data) : data(std::move(data)){}
@@ -14,6 +17,43 @@ struct rule{
     std::vector<std::string> right;
     int count;
     bool lexical;
+    rule(std::string  l,int c,bool lex):left(std::move(l)),count(c),lexical(lex){
+    }
+    rule(std::string l, int c, bool lex, std::vector<std::string> r):left(std::move(l)),right(std::move(r)),lexical(lex), count(c){}
+    bool operator==(const rule& other)const{
+        return (left==other.left && right==other.right);
+    }
+};
+
+struct weighted_rule{
+    rule rule;
+    double weight;
+    weighted_rule(struct rule r, double w):rule(std::move(r)),weight(w){}
+    bool operator==(const weighted_rule& other) const{
+        return (rule==other.rule && weight==other.weight);
+    }
+};
+
+struct queue_element{
+    int left;
+    int right;
+    weighted_rule rule;
+    double prob;
+    std::vector<struct rule> backtrace;
+    bool operator<(const queue_element& other) const{
+        return prob<other.prob;
+    }
+    bool operator==(const queue_element& other) const{
+        return (left==other.left && right==other.right && rule==other.rule);
+    }
+    queue_element(int l, int r, weighted_rule wr,double p):left(l),right(r), rule(std::move(wr)),prob(p){}
+    queue_element(int l, int r, weighted_rule wr,double p,std::vector<struct rule> bt):left(l),right(r), rule(std::move(wr)),prob(p), backtrace(std::move(bt)){}
+};
+
+struct weightedRulesComparator{
+    bool operator()(const weighted_rule& wr1, const weighted_rule& wr2) const{
+        return wr1.weight < wr2.weight;
+    }
 };
 
 bool compareRulesByCount(const rule& r1, const rule& r2);
@@ -48,7 +88,7 @@ struct index{
     [[nodiscard]] const rule& getBestMatch(const std::string& left) const{
         auto it = left_to_rules.find(left);
         if(it == left_to_rules.end() || it->second.empty()){
-            static rule default_rule = {"", {}, 0,false};
+            static rule default_rule = {"", 0, false,{}};
             return default_rule;
         }
         return it->second.front();
@@ -62,3 +102,8 @@ std::vector<std::string> split_sexpr(std::string sexpr);
 void saveGrammar(const struct index& grammar, std::string name);
 void printGrammar(const struct index& grammar);
 std::vector<rule> treeToRules(const node& tree);
+struct weighted_rule readNonLexical(const std::string& line);
+struct weighted_rule readLexical(const std::string& line);
+std::map<std::string, std::set<weighted_rule,weightedRulesComparator>> loadNonTerminal(const std::string& rules_path);
+std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> loadTerminal(const std::string& lex);
+void addQueueElements(std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> rules,const queue_element& qe,std::priority_queue<queue_element> queue, int word_count,std::vector<queue_element> c);
