@@ -112,6 +112,6 @@ std::map<std::string, std::set<weighted_rule,weightedRulesComparator>> loadNonTe
 std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> loadTerminal(const std::string& lex);
 void addQueueElements(std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> rules,const queue_element& qe,std::priority_queue<queue_element> * queue, int word_count,std::vector<queue_element> c);
 std::string treeToSExpression(const node& root);
-std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<std::string, std::set<weighted_rule, weightedRulesComparator>>& rules, std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> lex, std::string root);
-void printBacktrace(const std::vector<rule>& bt, const std::string& sentence);
+std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<std::string, std::set<weighted_rule, weightedRulesComparator>>& rules, std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> lex);
+void printBacktrace(const std::vector<rule>& bt, const std::string& sentence, const std::string& root);
 

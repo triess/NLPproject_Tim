@@ -34,8 +34,8 @@ int main(int argc, char** argv) {
         std::string line;
         while(std::getline(std::cin,line)){
             if(!line.empty()){
-                auto bt=deductiveParsing(line,r,l,root);
-                printBacktrace(bt,line);
+                auto bt=deductiveParsing(line,r,l);
+                printBacktrace(bt,line, root);
             }
         }
     }

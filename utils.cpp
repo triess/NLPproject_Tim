@@ -125,7 +125,7 @@ void saveGrammar(const struct index& grammar, const std::string& name){
     rules.close();
 }
 
-std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<std::string, std::set<weighted_rule, weightedRulesComparator>>& rules, std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> lex, std::string root){
+std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<std::string, std::set<weighted_rule, weightedRulesComparator>>& rules, std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> lex){
      auto queue = new struct std::priority_queue<queue_element>();
     std::vector<queue_element> c;
     auto words = split(sentence, " ");
@@ -133,10 +133,16 @@ std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<st
     //initialize queue
     std::cerr<<"initializing q"<<std::endl;
     for(const auto& w:words){
-        auto qe= new struct queue_element(counter,counter+1,*lex[w].rbegin(),0.0,{});
-        qe->prob=qe->rule.weight;
-        qe->backtrace.emplace_back(qe->rule.rule);
-        queue->push(*qe);
+        auto wr =lex.find(w);
+        if(wr==lex.end()){
+            std::cerr<<"word not in lexicon: "+w<<std::endl;
+            return {};
+        }else{
+            auto qe= new struct queue_element(counter,counter+1,*lex[w].rbegin(),0.0,{});
+            qe->prob=qe->rule.weight;
+            qe->backtrace.emplace_back(qe->rule.rule);
+            queue->push(*qe);
+        }
         counter++;
     }
     std::cerr<<"starting main loop"<<std::endl;
@@ -157,14 +163,14 @@ std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<st
     }
     std::cerr<<"finding solution"<<std::endl;
     //find solution
-    auto final = std::find_if(c.begin(),c.end(),[&words, &root](const struct queue_element& x){
-      return x.left==0 && x.right==words.size();//&& x.rule.rule.left==root
+    auto final = std::find_if(c.begin(),c.end(),[&words](const struct queue_element& x){
+      return x.left==0 && x.right==words.size();
     });
     if(final==c.end())return {};
     return final->backtrace;
 }
 
-void printBacktrace(const std::vector<rule>& bt, const std::string& sentence){
+void printBacktrace(const std::vector<rule>& bt, const std::string& sentence, const std::string& root){
     //std::cerr<<"printing"<<std::endl;
     if(bt.empty()){
         std::cerr<<"No tree spanning whole sentence found"<<std::endl;
@@ -199,7 +205,8 @@ void printBacktrace(const std::vector<rule>& bt, const std::string& sentence){
             bottom_up->erase(child2);
         }
     }
-    std::cout<<treeToSExpression((*bottom_up)[0])<<std::endl;
+    auto top = new node(root,{(*bottom_up)[0]});
+    std::cout<<treeToSExpression(*top)<<std::endl;
 }
 
 std::string treeToSExpression(const node& root){
