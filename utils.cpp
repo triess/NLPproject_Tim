@@ -131,7 +131,7 @@ std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<st
     auto words = split(sentence, " ");
     int counter=0;
     //initialize queue
-    std::cerr<<"initializing q"<<std::endl;
+    //std::cerr<<"initializing q"<<std::endl;
     for(const auto& w:words){
         auto wr =lex.find(w);
         if(wr==lex.end()){
@@ -145,7 +145,7 @@ std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<st
         }
         counter++;
     }
-    std::cerr<<"starting main loop"<<std::endl;
+    //std::cerr<<"starting main loop"<<std::endl;
     //main loop
     while(!queue->empty()){
         auto qe = queue->top();
@@ -159,9 +159,9 @@ std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<st
             it->prob=qe.prob;
             addQueueElements(rules,qe,queue,words.size(),c);
         }
-        std::cerr<<queue->size()<<std::endl;
+        //std::cerr<<queue->size()<<std::endl;
     }
-    std::cerr<<"finding solution"<<std::endl;
+    //std::cerr<<"finding solution"<<std::endl;
     //find solution
     auto final = std::find_if(c.begin(),c.end(),[&words](const struct queue_element& x){
       return x.left==0 && x.right==words.size();

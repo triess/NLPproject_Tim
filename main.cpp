@@ -2,7 +2,6 @@
 #include <cstring>
 #include "utils.h"
 #include "main.h"
-#include <cstring>
 
 int main(int argc, char** argv) {
     auto command = argv[1];
@@ -53,7 +52,7 @@ char* getCmdOption(char ** begin, char ** end, const std::string & option)
     {
         return *itr;
     }
-    return 0;
+    return nullptr;
 }
 bool cmdOptionExists(char** begin, char** end, const std::string& option)
 {
