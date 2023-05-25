@@ -165,8 +165,9 @@ std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<st
 }
 
 void printBacktrace(const std::vector<rule>& bt, const std::string& sentence){
-    std::cerr<<"printing"<<std::endl;
+    //std::cerr<<"printing"<<std::endl;
     if(bt.empty()){
+        std::cerr<<"No tree spanning whole sentence found"<<std::endl;
         std::cout<<"NOPARSE "+sentence<<std::endl;
         return;
     }
@@ -179,6 +180,7 @@ void printBacktrace(const std::vector<rule>& bt, const std::string& sentence){
         if(r.right.size()==1){
             auto it= std::find_if(bottom_up->begin(),bottom_up->end(),[&r](const node& x){return x.data==r.right[0];});
             if(it==bottom_up->end()){
+                std::cerr<<"backtraces faulty"<<std::endl;
                 std::cout<<"NOPARSE "+sentence<<std::endl;
                 return;
             }
@@ -188,6 +190,7 @@ void printBacktrace(const std::vector<rule>& bt, const std::string& sentence){
             auto child1 = std::find_if(bottom_up->begin(),bottom_up->end(),[&r](const node& x){return x.data==r.right[0];});
             auto child2 = std::find_if(bottom_up->begin(),bottom_up->end(),[&r](const node& x){return x.data==r.right[1];});
             if(child1==bottom_up->end() || child2==bottom_up->end()){
+                std::cerr<<"backtraces faulty"<<std::endl;
                 std::cout<<"NOPARSE "+sentence<<std::endl;
                 return;
             }
@@ -200,7 +203,7 @@ void printBacktrace(const std::vector<rule>& bt, const std::string& sentence){
 }
 
 std::string treeToSExpression(const node& root){
-    std::cerr<<"converting to sex"<<std::endl;
+    //std::cerr<<"converting to sex"<<std::endl;
     std::string ret = "(" + root.data;
     for(const auto& child : root.children){
         ret += " " + treeToSExpression(child);
@@ -224,9 +227,9 @@ void addQueueElements(std::map<std::string, std::set<weighted_rule, weightedRule
             for(int j=qe.right+1;j<word_count+1;j++){
                 auto finder = std::find_if(c.begin(),c.end(),[&r,&j,&qe](const queue_element& x){return x.rule.rule.left==r.rule.right[1]&&x.left==qe.right && x.right==j;});//*new struct queue_element(qe.right,j,r,0.0)
                 if(finder!=c.end() && finder->prob!=0.0){
-                    std::cerr<<"success 1"<<std::endl;
-                    auto x =new struct queue_element(qe.left,j,r,finder->prob*qe.prob*r.weight,{});
-                    std::copy(qe.backtrace.begin(), qe.backtrace.end(),x->backtrace.end());
+                    //std::cerr<<"success 1"<<std::endl;
+                    auto x =new struct queue_element(qe.left,j,r,finder->prob*qe.prob*r.weight,*new std::vector<rule>(qe.backtrace));
+                    x->backtrace.insert(x->backtrace.end(),finder->backtrace.begin(),finder->backtrace.end());
                     x->backtrace.emplace_back(r.rule);
                     queue->push(*x);
                 }
@@ -236,8 +239,9 @@ void addQueueElements(std::map<std::string, std::set<weighted_rule, weightedRule
             for(int i=0;i<qe.left;i++){
                 auto finder = std::find_if(c.begin(),c.end(),[&r,&i,&qe](const queue_element& x){return x.rule.rule.left==r.rule.right[0] && x.left==i && x.right==qe.left;});//*new struct queue_element(i,qe.left,r,0.0)
                 if(finder!=c.end() && finder->prob!=0.0){
-                    std::cerr<<"success 2"<<std::endl;
+                    //std::cerr<<"success 2"<<std::endl;
                     auto x = new struct queue_element(i,qe.right,r,finder->prob*qe.prob*r.weight,*new std::vector<rule>(qe.backtrace));
+                    x->backtrace.insert(x->backtrace.end(),finder->backtrace.begin(),finder->backtrace.end());
                     x->backtrace.emplace_back(r.rule);
                     queue->push(*x);
                 }
