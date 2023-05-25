@@ -30,7 +30,7 @@ struct rule{
 };
 
 struct weighted_rule{
-    rule rule;
+    struct rule rule;
     double weight;
     weighted_rule(struct rule r, double w):rule(std::move(r)),weight(w){}
     bool operator==(const weighted_rule& other) const{
@@ -41,7 +41,7 @@ struct weighted_rule{
 struct queue_element{
     int left;
     int right;
-    weighted_rule rule;
+    struct weighted_rule rule;
     double prob;
     std::vector<struct rule> backtrace;
     bool operator<(const queue_element& other) const{
