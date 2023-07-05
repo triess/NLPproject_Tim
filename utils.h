@@ -6,18 +6,23 @@
 #include <algorithm>
 #include <set>
 #include <queue>
+struct node;
 
 struct node{
-
     std::string data;
     std::vector<node> children;
+    struct node* parent;
     bool operator==(const node& other)const{
         return data==other.data && children==other.children;
     }
     explicit node(std::string data) : data(std::move(data)){}
     node(std::string d, std::vector<node> c):data(std::move(d)),children(std::move(c)){}
 };
+
 struct rule{
+    rule(){
+
+    }
     std::string left;
     std::vector<std::string> right;
     int count;
@@ -30,6 +35,9 @@ struct rule{
 };
 
 struct weighted_rule{
+    weighted_rule(){
+
+    }
     struct rule rule;
     double weight;
     weighted_rule(struct rule r, double w):rule(std::move(r)),weight(w){}
@@ -39,10 +47,13 @@ struct weighted_rule{
 };
 
 struct queue_element{
-    int left;
-    int right;
+    queue_element() {
+    }
+
+    int left{};
+    int right{};
     struct weighted_rule rule;
-    double prob;
+    double prob{};
     std::vector<struct rule> backtrace;
     bool operator<(const queue_element& other) const{
         return prob<other.prob;
@@ -99,6 +110,19 @@ struct index{
     }
 };
 
+double outside( std::string nonterm, std::vector<weighted_rule> grammar, std::string start);
+double inside(const std::string& nonterm,const std::vector<weighted_rule>& grammar);
+std::vector<weighted_rule> rulesList(const std::string& rules,bool lex);
+std::vector<node> smoothing(std::vector<node> forest,int t);
+std::string getSignature(const std::string& word);
+std::vector<node> unking(std::vector<node> forest,int t);
+node* findLeaf(node* root, const std::string& target);
+std::vector<std::string> getChildren(const node& tree);
+std::string ununk(std::string sexp,std::vector<std::string> sent);
+void printTree(const node& root);
+node debinarise(node root);
+node binarise(node root, int v, int h);
+std::string addParents(const node& n,int v);
 node readTree(const std::string& treeString);
 struct index* parseBank(const std::string& path);
 std::vector<std::string> split(const std::string& s, const std::string& delimiter);
@@ -109,9 +133,9 @@ std::vector<rule> treeToRules(const node& tree);
 struct weighted_rule readNonLexical(const std::string& line);
 struct weighted_rule readLexical(const std::string& line);
 std::map<std::string, std::set<weighted_rule,weightedRulesComparator>> loadNonTerminal(const std::string& rules_path);
-std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> loadTerminal(const std::string& lex);
+std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> loadTerminal(const std::string& lex,bool unk,bool smooth);
 void addQueueElements(std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> rules,const queue_element& qe,std::priority_queue<queue_element> * queue, int word_count,std::vector<queue_element> c);
 std::string treeToSExpression(const node& root);
-std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<std::string, std::set<weighted_rule, weightedRulesComparator>>& rules, std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> lex);
+std::vector<rule> deductiveParsing(const std::string& sentence,const std::map<std::string, std::set<weighted_rule, weightedRulesComparator>>& rules, std::map<std::string, std::set<weighted_rule, weightedRulesComparator>> lex,bool unk,bool smooth,bool astar,const std::string& s,const std::vector<weighted_rule>& g);
 void printBacktrace(const std::vector<rule>& bt, const std::string& sentence, const std::string& root);
 
